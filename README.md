@@ -1,84 +1,98 @@
-# 订阅清点台 · Subscription Ledger Lite
+# Subscription Ledger Lite
 
-实验性 v0.2。给想先把账单列清楚的人：不用账号、API key、服务器或付费接口。浏览器本地处理，不连接银行、不自动取消服务，也不保证省钱。
+An experimental v0.2 tool for reviewing subscription bills locally. No account, API key, paid endpoint, or backend account is required. It does not connect to banks, cancel services, or guarantee savings. The application interface remains in Simplified Chinese.
 
-## 开始使用
+## Start locally
 
-1. 下载仓库所有文件到同一文件夹，打开 `index.html`。
-2. 点击 **添加订阅**，填写服务名称、每周期整项金额、币种和下次续订日期。编号自动生成，默认每月/CNY/有效，可按账单修改。负责人、用途、复核意向为选填。
-3. 保存到清单后，查看按币种分开的月等值与年化卡片；下方按通知截止日排序，不是简单按续订日排序。
-4. **保存清单备份** 下载 `subscription-list.json`。确认浏览器下载完成后，点击确认备份按钮。下次可导入此JSON，继续编辑。
+Download and extract the complete repository. In the directory containing `index.html`, run an installed Python 3:
 
-试用虚构示例会要求确认覆盖已有内容。示例不是你的账单。界面与所有功能均无需API。
+```sh
+python3 -m http.server 8000 --bind 127.0.0.1
+```
 
-## 一次清点的完整流程
+On Windows with Python Launcher, use `py -3` instead of `python3`. Open `http://127.0.0.1:8000`. Stop the server with Ctrl+C. Serve only the project directory, not a parent directory containing private files. Python only serves the local static files; no API credentials are needed.
 
-- 新增、编辑、删除；可撤销**上一次删除**，新建/导入另一份清单后撤销记录清空。
-- 支持500项，每一项都可编辑，不再限制显示前50项。
-- 搜索服务名、负责人、用途，筛选有效/已取消；筛选不改变总额。
-- 有效订阅按通知截止日排序，已取消项在后。已取消无需填写续订日期，不计入总额，但你仍要核实已在服务商处取消。
-- 修改尚未加入清单时，备份会提醒先保存编辑；切换清单有覆盖确认。未备份改动或尚未提交的编辑在离开时尝试触发浏览器提醒，提醒是否显示取决于浏览器。不要依赖它代替备份。
-- 无效或超限导入保留当前清单；导入读取期间出现的新编辑优先，不会被迟到文件覆盖。
+This localhost method has been verified. Direct `file://` opening has not been verified.
 
-## 备份、草稿与隐私
+## Review a list
 
-### 文件备份（推荐）
-`subscription-list.json` 保存原始输入，可恢复编辑。`subscription-report.json` 是计算结果，**不能恢复编辑**，误选会提示而不是覆盖内容。可以保存已导入的未完成草稿，但计算仍需字段合法。
+1. Add a subscription with its service name, total amount per billing period, currency, and next renewal date. IDs are generated automatically. Defaults are monthly, CNY, and active; change them to match your bill. Owner, purpose, and review decision are optional.
+2. Save the entry to the list. Review separate monthly-equivalent and annualized totals for each currency. Entries are ordered by notice deadline, not simply renewal date.
+3. Download a list backup as `subscription-list.json`. Check that the browser actually saved it, then confirm the backup in the app. Import that JSON later to continue editing.
 
-浏览器不能可靠告知本网页文件是否真正下载成功，因此“请求下载”不自动清除未备份提醒；请确认文件存在再点击 **我已确认备份文件下载完成**。下载后若又修改清单，需要重新备份。
+The fictional demo asks before replacing current content. It is not a record of your bills.
 
-### 本机自动草稿（可选，默认关闭）
-主动勾选后，提交到清单的变化保存在 `localStorage`；未点击“加入清单/保存修改”的表单编辑不在草稿里。重开时提示你恢复，不自动覆盖当前页面。旧草稿尚未恢复或损坏时，不会被新修改自动覆盖。
+### Editing and safeguards
 
-草稿只在同一浏览器/相同页面来源可用，不同步，也不保证不会被浏览器清理。文件方式打开时某些浏览器可能禁用存储，工具会提示使用文件备份。
+- Add, edit, and delete entries; undo the **most recent deletion**. Starting or importing another list clears that undo history.
+- Up to 500 entries, all editable. Search names, owners, and purposes; filter active or cancelled entries without changing totals.
+- Cancelled entries appear last, need no renewal date, and are excluded from totals. You must still verify cancellation with the provider.
+- Backing up with an unsaved editor prompts you to save the edit first. Switching lists requires overwrite confirmation.
+- The app attempts to warn before leaving with unbacked-up changes or unsubmitted edits. Browsers control whether this prompt appears; do not rely on it instead of a backup.
+- Invalid or oversized imports preserve the current list. New edits made during asynchronous file reading take precedence over the arriving file.
 
-自动草稿**没有加密**，同设备/同源环境中的其他使用者可能读取。共享电脑请勿开启。关闭自动保存不会删除旧草稿；单独的“删除本机草稿”按钮经你确认后删除，并保留当前清单及已下载文件。删除后无法从本工具恢复旧草稿。
+## Backups, drafts, and privacy
 
-没有遥测、外部请求或第三方脚本。不要填密码、银行卡号或未授权个人信息；备份文件同样可能包含你的私人账单资料，请自行保管。
+### File backups: recommended
 
-## CSV 与 JSON
+`subscription-list.json` contains the original inputs and can restore editing. `subscription-report.json` contains calculated results and **cannot restore the list**; selecting it by mistake produces a warning instead of replacing data. Incomplete imported drafts can be saved, but calculations still require valid fields.
 
-CSV用于表格软件交换，**完整无损编辑备份请用JSON**。在“更多操作”中可下载虚构CSV模板、导出CSV或载入示例。UTF-8编码、BOM、逗号、引号及单元格换行均有测试。
+A webpage cannot reliably confirm that a download finished. Requesting a download therefore does not clear the backup warning. Confirm that the file exists before acknowledging completion. Back up again after further changes.
 
-固定表头：
-`asOf,id,name,currency,amount,cadence,status,nextRenewal,noticeDays,owner,purpose,decision`
+### Optional local drafts: off by default
 
-- 必需表头：`name,currency,amount,cadence,status,nextRenewal`。
-- `id` 可留空，自动编号；非空编号不能重复。
-- `asOf` 不填则用页面日期；若多行填写，日期必须一致。
-- `cadence`：`monthly/quarterly/yearly`；`status`：`active/cancelled`。
-- `decision`：`retain/review/cancel_candidate`，默认 `review`；`noticeDays` 默认0。
-- `nextRenewal` 对有效项必填，已取消可空。
-- 空白金额不当作0；最多两位小数，不接收货币符号或千位分隔符。
-- CSV导出对公式前缀添加单引号，降低表格公式执行风险；再次导入会保留该单引号，不偷偷还原为公式。因此任意文字的精确往返应使用JSON。
-- JSON/CSV最多1 MB，清单最多500项；不支持Excel `.xlsx`。
+Explicitly enabling drafts stores changes committed to the list in `localStorage`. Unsubmitted form edits are not included. On reopening, you are offered restoration; a draft does not silently replace current content. An unrestored or damaged older draft is protected from automatic overwriting.
 
-JSON格式为 `{ "schemaVersion":1, "asOf":"YYYY-MM-DD", "subscriptions":[...] }`，旧版没有schemaVersion也可导入。每项字段见 `sample.json`。未知字段明确拒绝，避免默默丢弃数据。所有导入日期和账单信息均由你负责核实。
+Drafts are limited to the same browser and page origin, are not synchronized, and may be cleared by the browser. Some browsers restrict storage for local files; use file backups when storage is unavailable.
 
-## 计算口径
+Drafts are **not encrypted**. Other users of the same device or origin may access them. Do not enable drafts on a shared computer. Turning off automatic saving does not delete old drafts. The separate delete-draft action requires confirmation, keeps the current list and downloaded files, and cannot recover the deleted draft afterward.
 
-- 金额是每周期整个订阅费用，不是单席位费用。最多两位小数；以百分之一单位累加，避免常见浮点相加误差。没有按每种币种官方最小单位做验证。
-- 每月/每季/每年分别乘12/4/1得到年化额；月等值=年化额÷12。界面保留两位小数，报告保留计算值。
-- 每种币种单独汇总，只有代码格式检查，无默认汇率，不把不同币种相加。
-- 通知截止日=人工录入的下次续订日减通知天数，按UTC自然日计算。复核基准日期由你设置，不推断工作日、时区合同条款或宽限期。
-- 已过截止日不会自动向未来推进：你需要核实真实下一周期并编辑日期。
-- 候选取消金额仅将你标记的有效项年化金额单独列出，不修改当前总额，不是立即可省金额，也不是已经取消。
-- 重复名称仅提示，不代表重复收费。
+No telemetry, external requests, or third-party scripts. Do not enter passwords, bank-card numbers, or unauthorized personal information. Downloaded backups may contain private billing information; store them appropriately.
 
-不计算折扣变化、按量计费、试用转换、退款、违约金或税费，不连接账单来源，不发送系统到期提醒。这不是实际现金流预测、会计账本或财务/税务/法律建议。原商机材料的SB122税务说法未核实，本工具不采用它。
+## CSV and JSON
 
-## 验证与局限
+CSV is for spreadsheet exchange. **Use JSON for a lossless editable backup.** Additional actions provide a fictional CSV template, CSV export, and sample loading. UTF-8, BOM, commas, quotes, and embedded newlines are supported.
 
-开发阶段内部 **59/59 自动测试通过**，覆盖算术、日期、分币种、CSV、保存恢复、默认值、取消状态、删除撤销、旧草稿保护、覆盖拒绝和异步竞态等。内部交互测试采用最小 DOM 模拟，不是浏览器引擎；测试代码不包含在本公开副本中。可通过界面载入示例，并按 [比较说明](COMPARISON.md) 中的输入手动复核。
+Headers:
 
-独立真实 Chromium 浏览器验收已通过：使用下载 ZIP 后解压的副本，通过 localhost 本地服务器打开，检查了 1180 px 桌面与 400 px 窄屏布局、5 项订阅编辑与多币种显示、JSON 备份后关闭并恢复、CSV 与报告下载、删除撤销及草稿流程。
+```text
+asOf,id,name,currency,amount,cadence,status,nextRenewal,noticeDays,owner,purpose,decision
+```
 
-验收范围不包括 `file://` 双击打开、实体手机、其他浏览器或存储受限模式；400 px 窄屏不是实体手机测试。不要把这些验收等同所有环境兼容或生产成熟度保证。
+- Required headers: `name,currency,amount,cadence,status,nextRenewal`.
+- Blank IDs are generated; nonempty IDs must be unique.
+- Blank `asOf` uses the page date. If multiple rows specify it, their dates must agree.
+- `cadence`: `monthly/quarterly/yearly`; `status`: `active/cancelled`.
+- `decision`: `retain/review/cancel_candidate`, default `review`; `noticeDays` defaults to 0.
+- Active entries require `nextRenewal`; cancelled entries may leave it blank.
+- Blank amounts are not zero. Amounts allow at most two decimal places, without currency symbols or thousands separators.
+- CSV export prefixes formula-like values with an apostrophe. Reimport preserves that apostrophe rather than reactivating a formula. Use JSON for exact arbitrary-text round trips.
+- JSON/CSV limit: 1 MB; list limit: 500 entries. Excel `.xlsx` is not supported.
 
-## 同类比较与许可
+JSON uses `{ "schemaVersion":1, "asOf":"YYYY-MM-DD", "subscriptions":[...] }`. Older files without `schemaVersion` are accepted. See `sample.json` for entry fields. Unknown fields are rejected rather than silently discarded. Verify imported dates and billing details yourself.
 
-[COMPARISON.md](COMPARISON.md)只陈述固定版本特定端点的缺汇率差异，不宣称全面优于Wallos。无第三方运行依赖、代码或素材，示例原创虚构，MIT许可。
+## Calculation assumptions
 
+- The amount is the entire subscription's cost per billing period, not a per-seat price. Values use at most two decimal places and are accumulated in hundredths to avoid common addition errors. Official minor-unit rules are not validated for each currency.
+- Monthly, quarterly, and yearly amounts are multiplied by 12, 4, and 1 respectively. Monthly equivalent is annualized amount divided by 12. The interface displays two decimals; reports retain calculated values.
+- Currencies are grouped separately, with code-format checks only. There is no default exchange rate or mixed-currency total.
+- Notice deadline equals the entered renewal date minus notice days, using UTC calendar days. The review date is supplied by you. Business days, contractual time zones, and grace periods are not inferred.
+- Past dates are not advanced automatically. Verify the next real billing cycle and edit the record.
+- Cancellation candidates are separately annualized active entries you marked for review. They do not change current totals, represent immediate savings, or confirm cancellation.
+- Duplicate-name warnings do not prove duplicate billing.
 
-## v0.2 界面层级
-主操作仅保留新增、备份与导入，示例/CSV/新建放在“更多操作”。支出以币种卡片呈现；订阅条目默认显示名称、金额与两个日期，负责人和公式可展开查看。手机采用单列布局，保留键盘焦点样式、跳到工作区入口及减少动态效果偏好。已通过上述 localhost 环境的桌面及窄屏真实浏览器验收；实体手机和 `file://` 双击方式未验。
+Discount changes, usage billing, trial conversions, refunds, termination fees, and taxes are excluded. The tool does not fetch bills or send system renewal notifications. It is not a cash-flow forecast, accounting ledger, or financial, tax, or legal advice. It does not implement the unverified SB122 tax claim from the original opportunity brief.
+
+## Verification and limitations
+
+**59 internal automated tests passed**, covering arithmetic, dates, currency separation, CSV, backup/restore, defaults, cancellation state, deletion undo, draft protection, overwrite refusal, and import races. Internal interaction tests use a minimal DOM simulation, not a browser engine. Test code is not included in this public repository. You can load the sample and manually check the inputs described in [COMPARISON.md](COMPARISON.md).
+
+Independent real Chromium acceptance used a downloaded and extracted ZIP served over localhost. It covered 1180 px desktop and 400 px narrow layouts, five edited subscriptions, multiple currencies, JSON backup followed by closing and restoring, CSV/report downloads, deletion undo, and draft workflows.
+
+Direct `file://` opening, physical phones, other browsers, and restricted-storage modes remain unverified. A narrow browser window is not a physical-phone test. These checks do not guarantee universal compatibility or production maturity.
+
+## Interface, comparison, and license
+
+Primary actions are add, backup, and import. Examples, CSV, and new-list actions are grouped separately. Currency cards summarize costs; compact subscription entries expose owner and calculation details on demand. Narrow layouts use one column, with keyboard focus indicators, a skip link, and reduced-motion support.
+
+[COMPARISON.md](COMPARISON.md) describes only a specific missing-exchange-rate behavior in a fixed version and endpoint of Wallos. It does not claim overall superiority. No third-party runtime dependencies, code, or assets; examples are original and fictional. MIT; see [LICENSE](LICENSE).

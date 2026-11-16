@@ -1,26 +1,40 @@
-# 比较与证据
+# Comparison and Evidence
 
-查阅日期：2026-11-16。[Wallos官方仓库](https://github.com/ellite/Wallos)是成熟自托管订阅管理工具，有服务器部署方案，功能覆盖追踪与统计。本工具不替代其持续管理功能。
+Reviewed on 2026-11-16. [Wallos](https://github.com/ellite/Wallos) is a mature self-hosted subscription manager with tracking and statistics. This tool does not replace its ongoing-management capabilities.
 
-本工具的可复现窄场景：临时本地复核一批订阅，不部署服务；保持CNY和USD分别汇总，输出每项年化公式及按输入通知期算出的截止日。在界面导入 sample.json 即可检验。无联网、无账号、无数据库。
+Our narrow workflow is a one-off local review: keep CNY and USD separate, show annualized calculations per entry, and derive notice deadlines from supplied dates. Import `sample.json` to inspect these outputs. No account, database, or external connection is required.
 
-已核对对方官方文档，并审阅下文所列固定提交的特定API端点源码；没有运行Wallos完整产品或进行完整源码审计。仅对下文限定的缺汇率场景给出源码推导差异，不能声称整体计算更准确、功能更强或别的工具均无相同功能。商业价值未验证。
+We reviewed the competitor's official documentation and the specific fixed-commit API source below. We did not run the complete Wallos product or audit its complete source. The difference is limited to the missing-exchange-rate path described here; it does not establish better overall arithmetic, broader features, or uniqueness. Commercial value remains unverified.
 
-## 固定版本的启动门槛比较
-[Wallos v5.5.1 README](https://github.com/ellite/Wallos/blob/v5.5.1/README.md)明确要求PHP 8.3与Web服务器，或Docker。对“已有一份JSON账单、仅需一次离线盘点且不允许安装服务器”的场景，本项目不需要这些运行环境，是可验证的部署门槛优势，而非金额计算或功能完整性优势。手动复核：导入 sample.json，检查每个币种独立汇总、月费乘以 12 的年化公式，以及续费日期减通知天数的截止日；代码无外部依赖。已在真实 Chromium 中验收下载 ZIP 解压副本，但使用 localhost 本地服务器启动；`file://` 双击方式未验，因此不能将该验收当作完整零安装体验的证明。
+## Runtime setup, with an important limitation
 
-## 新增同场景测试与未完成项
+The [Wallos v5.5.1 README](https://github.com/ellite/Wallos/blob/v5.5.1/README.md) specifies PHP 8.3 and a web server, or Docker. This static tool does not need those application runtimes or a database. That is a setup difference, not evidence of better calculation or feature completeness.
 
-同场景任务：月费39的有效订阅标记为候选取消，要求保持当前年化总额468，同时另列候选年化金额468，不将其当作已省钱。本项目对此情景的内部自动测试通过；可在界面将一项 39 CNY 月费有效订阅的决策设为候选取消，查看当前年化总额和候选金额分别为 468 CNY。Wallos v5.5.1完整取消工作流未运行，不能因为其README未列此情景就认定没有该功能。此取消情景尚缺同输入双方运行比较，不能声称此功能优于Wallos；与下文已核查的缺汇率场景不同。
+Manually check the sample's separate currency totals, monthly amount multiplied by 12, and renewal date minus notice days. There are no third-party application dependencies. Actual browser acceptance used a downloaded and extracted ZIP served by a localhost static server. Direct `file://` opening was not verified, so this is **not proof of a completely installation-free experience**.
 
-v0.2提供专用订阅表单、币种汇总卡片和截止日排序、JSON备份与CSV交换。自动交互测试使用最小 DOM 模拟；另已对下载 ZIP 解压副本完成真实 Chromium 验收，使用 localhost（非 `file://`），覆盖 1180 px 桌面与 400 px 窄屏、5 项编辑与多币种、备份关闭恢复、CSV/报告下载、撤销和草稿。实体手机、其他浏览器和存储受限模式未验，不能据此宣布整体优于竞品。
+## Cancellation scenario: not a competitive claim
 
-## 已核查的窄差异：无汇率时不输出混合币种总额
+For an active monthly subscription of 39, marking it as a cancellation candidate must keep the current annualized total at 468 while separately showing a candidate amount of 468. It must not represent that amount as money already saved.
 
-固定来源：[Wallos get_monthly_cost.php，commit d3cb93c513c02a78e0f7932d1603b523f4b4baef](https://github.com/ellite/Wallos/blob/d3cb93c513c02a78e0f7932d1603b523f4b4baef/api/subscriptions/get_monthly_cost.php)。只分析此API端点此版本，不能推广到Wallos所有页面、最新版本或全部能力。
+Internal tests passed for this case. To reproduce it, add an active 39 CNY monthly entry and mark it as a cancellation candidate; inspect the two totals. We did not run Wallos v5.5.1's complete cancellation workflow. An absent README description does not prove the feature is absent. No same-input comparison supports claiming superiority for this cancellation feature.
 
-对照条件：主币CNY；两个有效每月一次的订阅，39 CNY和10 USD；选定月内各支付一次；last_exchange_update没有date。该端点源码将canConvertCurrency设为false，添加缺汇率警告；循环仍把未经转换的price加入monthlyCost，随后用主币代码输出。由源码推导结果为49.00 CNY，并同时有警告。**没有运行Wallos实例**，这是可检查的源码推导，不能写成对方实测。
+Version 0.2 offers dedicated forms, currency cards, deadline ordering, JSON backups, and CSV exchange. In addition to minimal-DOM tests, real Chromium acceptance covered a downloaded ZIP over localhost: 1180 px desktop and 400 px narrow layouts, five edited entries, multiple currencies, closing and restoring a backup, CSV/report downloads, undo, and drafts. Physical phones, other browsers, and restricted-storage modes remain unverified.
 
-本项目内部测试实测得到 CNY 每月 39/年化 468、USD 每月 10/年化 120，始终分组，不输出单一币种 49 或 588。手动复现：新建空清单，分别添加两项状态为“有效”、周期为“每月”的订阅，金额及币种分别填 39 CNY 和 10 USD，续费日期均填一个有效日期，保存后检查两张币种汇总卡。测试代码及专用测试数据不包含在本公开副本中。这里每项均每月一次，避免把我们月等值与对方月内现金流在复杂周期下误比。
+## Verified narrow difference: no mixed-currency total without rates
 
-**可以成立的狭义优点**：没有汇率时，本项目避免生成看似单币种的混合金额，减少忽略警告后误读总额的可能。它不支持换汇，不表示整体计算功能更强；Wallos此路径已有警告。上述限定环境的真实浏览器验收已完成；本比较仍不替代产品发布审核，也不构成 Wallos 完整运行对照。
+Source: [Wallos get_monthly_cost.php at commit d3cb93c513c02a78e0f7932d1603b523f4b4baef](https://github.com/ellite/Wallos/blob/d3cb93c513c02a78e0f7932d1603b523f4b4baef/api/subscriptions/get_monthly_cost.php). This concerns only that endpoint and version, not all Wallos pages, current versions, or capabilities.
+
+Conditions:
+
+- Main currency: CNY.
+- Two active monthly subscriptions: 39 CNY and 10 USD.
+- Each pays once within the selected month.
+- `last_exchange_update` has no `date`.
+
+The fixed endpoint sets `canConvertCurrency` to false and adds a missing-rate warning. Its loop still adds unconverted `price` values to `monthlyCost`, then labels the result using the main currency. The source implies **49.00 CNY, accompanied by a warning**. **We did not execute a Wallos instance.** This is inspectable source reasoning, not a measured competitor run.
+
+Our internal execution gives CNY 39 monthly / 468 annualized and USD 10 monthly / 120 annualized, in separate groups. It does not produce a single-currency total of 49 or 588. To reproduce manually, create a blank list, add those two active monthly subscriptions with valid renewal dates, and inspect the two currency cards. Internal test code and dedicated fixtures are not included in the public repository.
+
+The once-per-month condition avoids comparing our monthly equivalents with complex within-month cash-flow schedules.
+
+**Supported narrow benefit:** without exchange rates, this tool avoids displaying a mixed amount as a single currency, reducing the opportunity to overlook a warning and misread a total. It does not perform conversion or provide generally stronger financial calculations. The competitor already warns on this path. Our browser acceptance does not substitute for a complete comparative Wallos run.
