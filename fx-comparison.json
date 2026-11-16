@@ -1,0 +1,29 @@
+{
+  "asOf": "2026-11-16",
+  "subscriptions": [
+    {
+      "id": "demo-cny",
+      "name": "虚构CNY服务",
+      "currency": "CNY",
+      "amount": 39,
+      "cadence": "monthly",
+      "status": "active",
+      "nextRenewal": "2026-12-15",
+      "noticeDays": 0,
+      "owner": "示例",
+      "purpose": "无汇率对照"
+    },
+    {
+      "id": "demo-usd",
+      "name": "虚构USD服务",
+      "currency": "USD",
+      "amount": 10,
+      "cadence": "monthly",
+      "status": "active",
+      "nextRenewal": "2026-12-15",
+      "noticeDays": 0,
+      "owner": "示例",
+      "purpose": "无汇率对照"
+    }
+  ]
+}

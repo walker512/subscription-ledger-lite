@@ -1,0 +1,6 @@
+const {test}=require('node:test'),a=require('node:assert/strict'),vm=require('node:vm'),fs=require('node:fs');
+function setup(){const els={};for(const id of ['input','output','download','status','sample','file','run','save'])els[id]={value:'',textContent:'',disabled:true,files:[],addEventListener(t,f){this[t]=f;}};const c={document:{getElementById:id=>els[id]},Tool:require('./core'),SAMPLE:require('./sample.json')};vm.runInNewContext(fs.readFileSync('app.js','utf8'),c);return els;}
+test('sample run and changed input invalidation',()=>{let e=setup();e.sample.onclick();e.run.onclick();a.equal(e.download.disabled,false);e.input.input();a.equal(e.download.disabled,true);a.equal(e.output.textContent,'');});
+test('failed run clears old result',()=>{let e=setup();e.sample.onclick();e.run.onclick();e.input.value='{';e.run.onclick();a.equal(e.download.disabled,true);a.equal(e.output.textContent,'');});
+test('later manual edit wins over file',async()=>{let e=setup(),resolve;e.file.files=[{size:10,text:()=>new Promise(r=>resolve=r)}];let p=e.file.onchange();e.input.value='manual';e.input.input();resolve('{}');await p;a.equal(e.input.value,'manual');});
+test('oversize preserves current text',async()=>{let e=setup();e.input.value='old';e.file.files=[{size:1000001}];await e.file.onchange();a.equal(e.input.value,'old');a.match(e.status.textContent,/超过/);});
